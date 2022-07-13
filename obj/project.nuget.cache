@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "EHKs9Sww1EA12eWdLhcxZn9Vp05L+dpNICRaFvCxdDi2WlUdlgXvhgFW7BUJRWLQGx7GQsMI/brLamEeGB5lLQ==",
+  "success": true,
+  "projectFilePath": "/home/jegan/WebCrawler/WebCrawler.csproj",
+  "expectedPackageFiles": [
+    "/home/jegan/.nuget/packages/htmlagilitypack/1.11.43/htmlagilitypack.1.11.43.nupkg.sha512",
+    "/home/jegan/.nuget/packages/microsoft.aspnetcore.app.ref/6.0.6/microsoft.aspnetcore.app.ref.6.0.6.nupkg.sha512",
+    "/home/jegan/.nuget/packages/microsoft.netcore.app.host.linux-x64/6.0.6/microsoft.netcore.app.host.linux-x64.6.0.6.nupkg.sha512",
+    "/home/jegan/.nuget/packages/microsoft.netcore.app.ref/6.0.6/microsoft.netcore.app.ref.6.0.6.nupkg.sha512"
+  ],
+  "logs": []
+}
