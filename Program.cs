@@ -7,27 +7,20 @@ namespace WebCrawler
         
         static void Main(string[] args)
         {
-            var wiki_history_xpath = 
-            "//div[@id=mw-content-text]/" + 
-            "following-sibling::sup[@id=cite_ref-:0_155-1]" +
-            "preceding-sibling::*";
-            Console.SetOut(TextWriter.Null);
+            var start_xpath = @"//*[@id='History']/parent::h2";
+            var end_xpath = @"//*[@id='cite_ref-:0_155-1']";
+
+            //consider making below global
             var html_doc = new HtmlDocument();
             var wikipedia_html = get_wikipedia_html();
             html_doc.LoadHtml(wikipedia_html);
-            var history_section_html = html_doc.DocumentNode.SelectNodes(wiki_history_xpath);
-            
-            if (wikipedia_html is string wiki_html_string)
-            {
-                var html_doc1 = new HtmlDocument();
-                html_doc.Load(wiki_html_string);
-                var history_section_html1 = html_doc.DocumentNode.SelectNodes(wiki_history_xpath);
-                string s = scrape_wiki(html_doc);
-            }
+
+            var crawler = html_doc.DocumentNode.SelectSingleNode(start_xpath);
+            var end_node = html_doc.DocumentNode.SelectSingleNode(end_xpath);
+            scrape_wiki(crawler, end_node);
         }
 
-        static string? get_wikipedia_html()
-        {
+        static string? get_wikipedia_html() {
             string url = "https://en.wikipedia.org/wiki/Microsoft";
             using (HttpClient client = new HttpClient())
             {
@@ -41,8 +34,29 @@ namespace WebCrawler
             }
         }
 
-        static string scrape_wiki(HtmlDocument html_doc) {
+        static string scrape_wiki_console(HtmlNode crawler, HtmlNode end_node) {
+            while(crawler != end_node) {
+                Console.WriteLine("Element name: " + crawler.Name);
+                foreach (HtmlNode crawler_elem in crawler.DescendantsAndSelf()) {
+                    Console.WriteLine("  NodeType : " + crawler_elem.NodeType);
+                    Console.WriteLine("  Child Element : " + crawler_elem.Name);
+                    Console.WriteLine("      InnerHtml :" + crawler_elem.InnerHtml);
+                }
+                crawler = crawler.NextSibling;
+                Console.WriteLine("");
+            }
             return "";
+        }
+
+        static string scrape_wiki(HtmlNode crawler, HtmlNode end_node) {
+            while(crawler != end_node) {
+                foreach (HtmlNode crawler_elem in crawler.DescendantsAndSelf()) {
+                    if(crawler_elem.NodeType != HtmlNodeType.Text) {
+                        continue;
+                    }
+
+                }
+            }
         }
     }
 }
