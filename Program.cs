@@ -1,7 +1,5 @@
 ﻿using HtmlAgilityPack;
-using System.Web;
 using System.Text.RegularExpressions;
-using System.IO;
 
 namespace WebCrawler
 {
@@ -15,30 +13,31 @@ namespace WebCrawler
             get{ return word_dict; }
             set{ word_dict = value; }
         }
-        internal static string append_path = "output/log.txt";
-
         //Use the field below to specify how many words you would like to return!
-        internal static int num_words = 10;
+        internal static int num_words = 1600;
 
         //Use the field below to specify any words you'd like to exclude from the search!
-        internal static string[] excluded_words = {};
+        internal static string[] excluded_words = {"the"};
 
         static void Main(string[] args)
-        {            
+        {
+            if(num_words > 1600) {
+                Console.WriteLine("Adjusting number of words to display to 1600.");
+                num_words = 1600;
+            }
             HtmlDocument? wiki_html_doc = get_load_html_doc();
-            if(wiki_html_doc == null){
+            if (wiki_html_doc == null)
+            {
                 Console.WriteLine("Unable to access Wikipedia. Exiting.");
                 return;
             }
             scrape_runner(wiki_html_doc);
 
-            using (StreamWriter writer = new StreamWriter(@"output/out.txt"))
+            var sorted_descending_enumerable = 
+            (from kvp in Word_Dict orderby kvp.Value descending select kvp).Take(num_words);
+            foreach (KeyValuePair<string, int> kvp in sorted_descending_enumerable)
             {
-                var sorted_descending_enumerable = (from kvp in Word_Dict orderby kvp.Value descending select kvp).Take(Int32.Parse(num_words);
-                foreach (KeyValuePair<string, int> kvp in sorted_descending_enumerable)
-                {
-                    writer.WriteLine(kvp.Key + ": " + kvp.Value);
-                }
+                Console.WriteLine(kvp.Key + ": " + kvp.Value);
             }
         }
 
@@ -76,7 +75,7 @@ namespace WebCrawler
             }
         }
 
-        static string scrape_runner(HtmlDocument wiki_html_doc)
+        static void scrape_runner(HtmlDocument wiki_html_doc)
         {
             var start_node = wiki_html_doc.DocumentNode.SelectSingleNode(start_xpath);
             var end_node = wiki_html_doc.DocumentNode.SelectSingleNode(end_xpath);
@@ -87,8 +86,6 @@ namespace WebCrawler
                     start_node = start_node.NextSibling;
                 }
 
-                Console.WriteLine("Element name: " + start_node.Name);
-
                 scrape_nodes(start_node.DescendantsAndSelf().ToArray());
 
                 if (start_node.NextSibling == null)
@@ -96,10 +93,8 @@ namespace WebCrawler
                     break;
                 }
                 start_node = start_node.NextSibling;
-                Console.WriteLine("");
             }
             scrape_nodes(start_node.DescendantsAndSelf().ToArray());
-            return "";
         }
 
         static void scrape_nodes(HtmlNode[] descendants)
@@ -119,8 +114,6 @@ namespace WebCrawler
                     continue;
                 }
                 add_to_dictionary(match_scraped_string(descendants[i].InnerText));
-                Console.WriteLine("      InnerHtml: " + HttpUtility.HtmlDecode(descendants[i].InnerText));
-                File.AppendAllText(append_path, HttpUtility.HtmlDecode(descendants[i].InnerText));
             }
         }
 
@@ -139,6 +132,9 @@ namespace WebCrawler
         {
             foreach (string s in arr)
             {
+                if(excluded_words.Contains(s)) {
+                    return;
+                }
                 if (!Word_Dict.ContainsKey(s))
                 {
                     Word_Dict.Add(s, 1);
