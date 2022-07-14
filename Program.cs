@@ -138,6 +138,7 @@ namespace WebCrawler
                 if (!Word_Dict.ContainsKey(s))
                 {
                     Word_Dict.Add(s, 1);
+                    return;
                 }
                 Word_Dict[s]++;
             }
