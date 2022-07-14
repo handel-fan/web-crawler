@@ -1,4 +1,6 @@
 ﻿using HtmlAgilityPack;
+using System.Web;
+using System.Text.RegularExpressions;
 
 namespace WebCrawler
 {
@@ -6,10 +8,9 @@ namespace WebCrawler
     {
         
         internal Dictionary<string, int> word_dict  = new Dictionary<string, int>();
+        internal static string[] skippable_types = {"style", "link", "sup"};
         static void Main(string[] args)
         {
-
-
             var start_xpath = @"//*[@id='History']/parent::h2";
             var end_xpath = @"//*[@id='cite_ref-:0_155-1']";
 
@@ -22,7 +23,7 @@ namespace WebCrawler
             html_doc.LoadHtml(wikipedia_html);
             var crawler = html_doc.DocumentNode.SelectSingleNode(start_xpath);
             var end_node = html_doc.DocumentNode.SelectSingleNode(end_xpath);
-            scrape_wiki_console(crawler, end_node);
+            scrape_runner(crawler, end_node);
         }
 
         static void debug_test() {
@@ -50,52 +51,75 @@ namespace WebCrawler
             }
         }
 
-        static string scrape_wiki_console(HtmlNode crawler, HtmlNode end_node)
+        static string scrape_runner(HtmlNode start_node, HtmlNode end_node)
         {
-            Random rnd = new Random();
-            int num = rnd.Next(100);
             string path = @"web-crawler-log/log.txt";
             using (StreamWriter writer = new StreamWriter(path))
             {
-                while (crawler != end_node)
+                while (start_node != end_node)
                 {
-                    writer.WriteLine("Element name: " + crawler.Name);
-                    foreach (HtmlNode crawler_elem in crawler.DescendantsAndSelf())
+                    while (skippable_types.Contains(start_node.Name))
                     {
-                        if (crawler_elem.NodeType != HtmlNodeType.Text)
-                        {
-                            continue;
-                        }
-                        writer.WriteLine("  NodeType: " + crawler_elem.NodeType);
-                        writer.WriteLine("  Child Element: " + crawler_elem.Name);
-                        writer.WriteLine("      InnerHtml: " + crawler_elem.InnerHtml);
-                        writer.WriteLine("      InnerText: " + crawler_elem.InnerText);
+                        start_node = start_node.NextSibling;
                     }
-                    if(crawler.NextSibling == null) {
+
+                    Console.WriteLine("Element name: " + start_node.Name);
+                    writer.WriteLine("Element name: " + start_node.Name);
+
+                    scrape_nodes(start_node.DescendantsAndSelf().ToArray());
+
+                    if (start_node.NextSibling == null)
+                    {
                         break;
                     }
-                    crawler = crawler.NextSibling;
+                    start_node = start_node.NextSibling;
+
                     writer.WriteLine("");
+                    Console.WriteLine("");
                 }
             }
             return "";
         }
 
-        static string scrape_wiki(HtmlNode crawler, HtmlNode end_node)
+        static void scrape_nodes(HtmlNode[] descendants)
         {
-            while (crawler != end_node)
+            string path = @"web-crawler-log/log.txt";
+            using (StreamWriter writer = new StreamWriter(path))
             {
-                foreach (HtmlNode crawler_elem in crawler.DescendantsAndSelf())
+                for (int i = 0; i < descendants.Length; i++)
                 {
-                    if (crawler_elem.NodeType != HtmlNodeType.Text)
+                    if (skippable_types.Contains(descendants[i].Name))
+                    {
+                        if (descendants[i].HasChildNodes)
+                        {
+                            foreach (HtmlNode skippable_type_descendant in descendants[i].Descendants())
+                            {
+                                i++;
+                            }
+                            break;
+                        }
+                        continue;
+                    }
+                    if (skip_useless_valid_descendant(descendants[i]))
                     {
                         continue;
                     }
-                    string s = crawler_elem.InnerText;
-                    add_to_dictionary();
+                    string[] arr = format_scraped_string(descendants[i].InnerText);
+                    Console.WriteLine("      InnerHtml: " + HttpUtility.HtmlDecode(descendants[i].InnerText));
+                    writer.WriteLine("      InnerHtml: " + HttpUtility.HtmlDecode(descendants[i].InnerText));
                 }
             }
-            return "";
+        }
+
+        static bool skip_useless_valid_descendant(HtmlNode node) {
+            return node.NodeType != HtmlNodeType.Text || node.InnerHtml == null || node.InnerHtml == "";
+        }
+
+        static string[] format_scraped_string(string s) {
+            return Regex.Matches(s, @"\b[\w']+\b")
+                .Cast<Match>()
+                .Select(m => m.Value)
+                .ToArray();
         }
 
         static void add_to_dictionary()
