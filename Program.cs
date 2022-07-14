@@ -14,7 +14,7 @@ namespace WebCrawler
             set{ word_dict = value; }
         }
         //Use the field below to specify how many words you would like to return!
-        internal static int num_words = 1600;
+        internal static int num_words = 10;
 
         //Use the field below to specify any words you'd like to exclude from the search!
         internal static string[] excluded_words = {"the"};
